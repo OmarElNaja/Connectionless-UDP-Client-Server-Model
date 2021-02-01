@@ -74,7 +74,7 @@ int main(int argc, char const *argv[]){
             exit(1);
         }
     }
-    printf("Message has been sent back to client.");
+    printf("Message has been sent back to client.\n");
     close(sockfd);
     return 0;
 }

@@ -66,9 +66,9 @@ int main(int argc, char *argv[])
     
     // adding code
     printf("Please input file as follows: ftp <filename>\n");
-    char ftp[BUF_SIZE];
+    char command[BUF_SIZE];
     char file_name[BUF_SIZE];
-    scanf("%s %s", ftp, file_name);
+    scanf("%s %s", command, file_name);
 
     // Error check
 
@@ -77,14 +77,14 @@ int main(int argc, char *argv[])
         exit(1);
     }
     else {
-        if (sendto(sockfd, "ftp", strlen("ftp"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
+        if (sendto(sockfd, command, strlen(command), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
             fprintf(stderr, "Failed to send message back to server");
             exit(1);
         }
     }
     
     socklen_t addr_len = sizeof(server_addr);
-    numbytes=recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len);
+    numbytes = recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len);
     if (numbytes < 0){
         fprintf(stderr, "Failed to receive message from server");
         exit(1);
