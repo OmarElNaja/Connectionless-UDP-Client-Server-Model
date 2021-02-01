@@ -70,7 +70,7 @@ int main(int argc, char const *argv[]){
         }
     } else {
         if (sendto(sockfd, "no", strlen("no"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
-            fprintf(stderr, "Failed to send message back to client");
+            fprintf(stderr, "Failed to send message back to client\n");
             exit(1);
         }
     }

@@ -1,5 +1,5 @@
 all: client.c
-	gcc -g -Wall -o client client.c
+	gcc -g -Wall -o deliver client.c
 
 clean:
-	$(RM) client
+	$(RM) deliver
