@@ -11,7 +11,7 @@
 
 // Beej's Guide, page 60
 
-#define BUF_SIZE 1024
+#define BUF_SIZE 4096
 
 int main(int argc, char const *argv[]){
     if(argc != 2){
@@ -21,7 +21,6 @@ int main(int argc, char const *argv[]){
     int SERVERPORT = atoi(argv[1]);
 
     int sockfd;  // listen on sockfd 
-    int numbytes;
     //struct addrinfo hints, *servinfo, *p;
     //struct sockaddr_storage their_addr; // connector's address information    
     struct sockaddr_in server_addr;
@@ -45,36 +44,38 @@ int main(int argc, char const *argv[]){
     
     //make a socket
     sockfd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    printf("we made a socket\n");
     if (sockfd < 0) {
         return 0;
+        printf("socket has issues.");
     }
     
     // bind it to port
-    if (bind(sockfd, (struct sockaddr*) &server_addr, sizeof(server_addr)) <0){
+    if (bind(sockfd, (struct sockaddr*) &server_addr, sizeof(server_addr)) == -1){
+        fprintf(stderr, "wtf its not binding");
         close(sockfd);
         return 0;
     }
-    printf("Server here, I'm just waiting\n");
+    printf("Server here, I'm just waiting");
+    
     // receive from client
-    numbytes=recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len);
-    if (numbytes < 0){
+    if (recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len) == -1){
         fprintf(stderr, "Failed to receive from client\n");
         exit(1);
     }
-    buf[numbytes] = '\0';
-    // create response
+
     if (strcmp(buf, "ftp") == 0){
-        if (sendto(sockfd, "yes", strlen("yes"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
+        if (sendto(sockfd, "yes", strlen("yes"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) == -1){
             fprintf(stderr, "Failed to send message back to client");
             exit(1);
         }
     } else {
-        if (sendto(sockfd, "no", strlen("no"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
+        if (sendto(sockfd, "no", strlen("no"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) == -1){
             fprintf(stderr, "Failed to send message back to client");
             exit(1);
         }
     }
-    printf("Message has been sent back to client.");
+
     close(sockfd);
     return 0;
 }
