@@ -21,27 +21,16 @@ int main(int argc, char const *argv[]){
     int SERVERPORT = atoi(argv[1]);
 
     int sockfd;  // listen on sockfd 
-    int numbytes;
-    //struct addrinfo hints, *servinfo, *p;
-    //struct sockaddr_storage their_addr; // connector's address information    
+    int numbytes;  
     struct sockaddr_in server_addr;
     char buf[BUF_SIZE]={0};
     socklen_t addr_len;
 
     // we are packing struct by hand (see pg 73)
-  
     server_addr.sin_family = AF_INET;    // use 4/6
-    //server_addr.sin_socktype = SOCK_DGRAM;   
-    //server_addr.sin_flags = AI_PASSIVE; // use my IP
-    //server_addr.sin_protocol = IPPROTO_UDP; // UDP protocol  
     server_addr.sin_port = htons(SERVERPORT);
     server_addr.sin_addr.s_addr = INADDR_ANY;
     memset(server_addr.sin_zero, 0, sizeof(server_addr.sin_zero));  
-
-   /*if ((rv = getaddrinfo(NULL, SERVERPORT, &hints, &servinfo)) != 0) { 
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-        return 1;
-    }*/
     
     //make a socket
     sockfd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -65,7 +54,7 @@ int main(int argc, char const *argv[]){
     // create response
     if (strcmp(buf, "ftp") == 0){
         if (sendto(sockfd, "yes", strlen("yes"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
-            fprintf(stderr, "Failed to send message back to client");
+            fprintf(stderr, "Failed to send message back to client\n");
             exit(1);
         }
     } else {

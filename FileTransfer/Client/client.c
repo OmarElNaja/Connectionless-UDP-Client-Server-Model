@@ -22,34 +22,7 @@ int main(int argc, char *argv[])
         fprintf(stderr,"usage: talker hostname message\n");
         exit(1);
     }
-    int SERVERPORT = atoi(argv[2]);
-    /*
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_DGRAM; 
-
-   if ((rv = getaddrinfo(argv[1], SERVERPORT, &hints, &servinfo)) != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-        return 1;
-    }
-    // loop through all the results and make a socket
-    for(p = servinfo; p != NULL; p = p->ai_next) {
-        if ((sockfd = socket(p->ai_family, p->ai_socktype,
-                p->ai_protocol)) == -1) {
-            perror("talker: socket");
-    continue; }
-    break; }
-    if (p == NULL) {
-        fprintf(stderr, "talker: failed to create socket\n");
-        return 2;
-    }
-    if ((numbytes = sendto(sockfd, argv[2], strlen(argv[2]), 0,
-             p->ai_addr, p->ai_addrlen)) == -1) {
-        perror("talker: sendto");
-        exit(1);
-    }
-    */
-   
+    int SERVERPORT = atoi(argv[2]); 
     struct sockaddr_in server_addr;
     char buf[BUF_SIZE]={0};
 
@@ -60,20 +33,28 @@ int main(int argc, char *argv[])
 
     //make a socket
     sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-    // bind it to port
-    //bind(sockfd, (struct sockaddr*) &server_addr, sizeof(server_addr));
     
     // adding code
     printf("Please input file as follows: ftp <filename>\n");
-    char command[BUF_SIZE];
-    char file_name[BUF_SIZE];
-    scanf("%s %s", command, file_name);
+
+    char command[BUF_SIZE]= {0};
+    char file_name[BUF_SIZE] = {0};
+    char *test;
+    char *name;
+    
+    // Get user input
+    while (file_name[0] == 0){
+        fgets(buf, BUF_SIZE, stdin);
+        test = strtok(buf, " ");
+        if (test!=NULL) strcpy(command, test);
+        name = strtok(NULL, " \n");
+        if (name!=NULL) strcpy(file_name, name);
+        else printf("Usage: ftp <filename>\n");
+    }
 
     // Error check
-
     if (access(file_name, F_OK)!=0){
-        fprintf(stderr, "file does not exist");
+        fprintf(stderr, "file does not exist\n");
         exit(1);
     }
     else {
@@ -93,10 +74,10 @@ int main(int argc, char *argv[])
 
     if(strcmp(buf, "yes") == 0){
         printf("A file transfer can start\n");
-    } 
+    } else {
+        printf("Usage: ftp <filename>\n");
+    }
 
-    //freeaddrinfo(servinfo);
-    //printf("talker: sent %d bytes to %s\n", numbytes, argv[1]);
     close(sockfd);
     return 0; 
 }
