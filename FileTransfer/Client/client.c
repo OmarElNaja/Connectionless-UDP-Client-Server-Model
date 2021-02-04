@@ -40,15 +40,14 @@ int main(int argc, char *argv[])
     char command[BUF_SIZE]= {0};
     char file_name[BUF_SIZE] = {0};
     char *test;
-    char *name;
     
     // Get user input
     while (file_name[0] == 0){
         fgets(buf, BUF_SIZE, stdin);
         test = strtok(buf, " ");
         if (test!=NULL) strcpy(command, test);
-        name = strtok(NULL, " \n");
-        if (name!=NULL) strcpy(file_name, name);
+        test = strtok(NULL, " \n");
+        if (test!=NULL) strcpy(file_name, test);
         else printf("Usage: ftp <filename>\n");
     }
 
