@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include "FileTransfer/packet.h"
 
 // Beej's Guide, page 60
 
@@ -66,4 +67,7 @@ int main(int argc, char const *argv[]){
     printf("Message has been sent back to client.\n");
     close(sockfd);
     return 0;
+
+    // -------------------- SECTION 3 CODE -------------------- //
+
 }
