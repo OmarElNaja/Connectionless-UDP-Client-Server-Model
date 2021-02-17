@@ -8,11 +8,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+
 #include "FileTransfer/packet.h"
 
 // Beej's Guide, page 60
-
-#define BUF_SIZE 1024
 
 int main(int argc, char const *argv[]){
     if(argc != 2){
@@ -65,6 +64,20 @@ int main(int argc, char const *argv[]){
         }
     }
     printf("Message has been sent back to client.\n");
+
+    // -------------- SECTION 3 CODE --------------- //
+    FILE *fp;
+    packet packet;
+    while(){
+        if (recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len) == -1)){
+            fprintf(stderr, "Failed to receive from client\n");
+        }
+        else {
+            stringToPacket(buf, &packet);
+            fp = fopen(packet->filename, "w");
+        }
+    }
+
     close(sockfd);
     return 0;
 }
