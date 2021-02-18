@@ -53,10 +53,31 @@ int main(int argc, char const *argv[]){
     buf[numbytes] = '\0';
     // create response
     if (strcmp(buf, "ftp") == 0){
-        if (sendto(sockfd, "yes", strlen("yes"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
-            fprintf(stderr, "Failed to send message back to client\n");
-            exit(1);
+
+    // -------------- SECTION 3 CODE --------------- //
+        FILE *fp;
+        packet packet;
+        while(){
+            // Check if packet recieved
+            if (recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len) < 0)){
+                fprintf(stderr, "Failed to receive from client\n");
+                exit(1);
+            }
+            // Parse packet
+            stringToPacket(buf, &packet);
+            // Create file if packet no. 1
+            if (packet->frag_no == 1) fp = fopen(packet->filename, "w");
+            // Write to file
+            fwrite(packet->filedata, sizeof(char), packet->size, fp);
+            // Send acknowledgement back to client
+            if (sendto(sockfd, "ACK", strlen("ACK"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
+                fprintf(stderr, "Failed to send message back to client\n");
+                exit(1);
+            }
+            // End of file
+            if (packet->frag_no == packet->total_frag) break;
         }
+
     } else {
         if (sendto(sockfd, "no", strlen("no"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
             fprintf(stderr, "Failed to send message back to client\n");
@@ -64,20 +85,8 @@ int main(int argc, char const *argv[]){
         }
     }
     printf("Message has been sent back to client.\n");
-
-    // -------------- SECTION 3 CODE --------------- //
-    FILE *fp;
-    packet packet;
-    while(){
-        if (recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len) == -1)){
-            fprintf(stderr, "Failed to receive from client\n");
-        }
-        else {
-            stringToPacket(buf, &packet);
-            fp = fopen(packet->filename, "w");
-        }
-    }
-
+    
+    fclose(fp);
     close(sockfd);
     return 0;
 }

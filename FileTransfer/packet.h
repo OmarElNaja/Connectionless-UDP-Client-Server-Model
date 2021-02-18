@@ -54,4 +54,14 @@ void stringToPacket(char* str, packet *packet){
         }
         length++;
     }
+    return;
 }
+
+/*void packetToString(char* str, packet *packet){
+    snprintf(str, BUF_SIZE, "%d:%d:%d:%s", 
+        packet->total_frag,
+        packet->frag_no,
+        packet->size,
+        packet->filename);
+    return;
+}*/
