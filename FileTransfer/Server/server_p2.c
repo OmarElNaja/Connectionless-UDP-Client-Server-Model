@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include "FileTransfer/packet.h"
+#include "/homes/d/dengpris/ECE361/FileTransfer/packet.h"
 
 // Beej's Guide, page 60
 
@@ -56,27 +56,28 @@ int main(int argc, char const *argv[]){
 
     // -------------- SECTION 3 CODE --------------- //
         FILE *fp;
-        packet packet;
-        while(){
+        struct packet packet;
+        while(1){
             // Check if packet recieved
-            if (recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len) < 0)){
+            if (recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len) < 0){
                 fprintf(stderr, "Failed to receive from client\n");
                 exit(1);
             }
             // Parse packet
             stringToPacket(buf, &packet);
             // Create file if packet no. 1
-            if (packet->frag_no == 1) fp = fopen(packet->filename, "w");
+            if (packet.frag_no == 1) fp = fopen(packet.filename, "w");
             // Write to file
-            fwrite(packet->filedata, sizeof(char), packet->size, fp);
+            fwrite(packet.filedata, sizeof(char), packet.size, fp);
             // Send acknowledgement back to client
             if (sendto(sockfd, "ACK", strlen("ACK"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
                 fprintf(stderr, "Failed to send message back to client\n");
                 exit(1);
             }
             // End of file
-            if (packet->frag_no == packet->total_frag) break;
+            if (packet.frag_no == packet.total_frag) break;
         }
+        fclose(fp);
 
     } else {
         if (sendto(sockfd, "no", strlen("no"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
@@ -85,8 +86,7 @@ int main(int argc, char const *argv[]){
         }
     }
     printf("Message has been sent back to client.\n");
-    
-    fclose(fp);
+
     close(sockfd);
     return 0;
 }

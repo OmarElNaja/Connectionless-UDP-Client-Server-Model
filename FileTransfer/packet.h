@@ -6,19 +6,10 @@ struct packet {
     unsigned int size;
     char* filename;
     char filedata[BUF_SIZE];
-}
+};
 
-/*
-packet = 3:2:10:foobar.txt:"lo World!"
 
-total_frag = 3
-frag_no = 2
-size = 10
-filename = "foobar.txt"
-filddata = "lo World!"
-*/
-
-void stringToPacket(char* str, packet *packet){
+void stringToPacket(char* str, struct packet *packet){
     int count = 0;
     int start = 0;
     int length = 0;
@@ -28,7 +19,7 @@ void stringToPacket(char* str, packet *packet){
         if(str[i] == ':'){
             memset(parsed, 0, BUF_SIZE);
             memcpy(parsed, &str[start], length);
-            parsed[length] = '\0'
+            parsed[length] = '\0';
             
             if (count == 0){              
                 packet->total_frag = atoi(parsed);
@@ -43,7 +34,7 @@ void stringToPacket(char* str, packet *packet){
                 packet->filename = parsed;
             }
             else if (count == 4){
-                packet->filddata = parsed;
+                memcpy(&(packet->filedata), &str[start], length);
             }
             else {
                 fprintf(stderr, "Packet error!\n");
@@ -56,12 +47,3 @@ void stringToPacket(char* str, packet *packet){
     }
     return;
 }
-
-/*void packetToString(char* str, packet *packet){
-    snprintf(str, BUF_SIZE, "%d:%d:%d:%s", 
-        packet->total_frag,
-        packet->frag_no,
-        packet->size,
-        packet->filename);
-    return;
-}*/
