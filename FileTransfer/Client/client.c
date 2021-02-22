@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <time.h>
 #include "FileTransfer/packet.h"
 //#define SERVERPORT "4950" 
 #define BUF_SIZE 1024
@@ -53,6 +54,9 @@ int main(int argc, char *argv[])
         if (test!=NULL) strcpy(file_name, test);
         else printf("Usage: ftp <filename>\n");
     }
+    
+    clock_t start, end;
+    double cpu_time_used;
 
     // Error check
     if (access(file_name, F_OK)!=0){
@@ -60,6 +64,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
     else {
+        start = clock();
         if (sendto(sockfd, command, strlen(command), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
             fprintf(stderr, "Failed to send message back to server");
             exit(1);
@@ -68,6 +73,11 @@ int main(int argc, char *argv[])
     
     socklen_t addr_len = sizeof(server_addr);
     numbytes = recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len);
+    
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("The round-trip time is %f seconds\n", cpu_time_used);
+    
     if (numbytes < 0){
         fprintf(stderr, "Failed to receive message from server");
         exit(1);
