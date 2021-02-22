@@ -8,10 +8,13 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-
+#include "FileTransfer/packet.h"
 //#define SERVERPORT "4950" 
 #define BUF_SIZE 1024
 // the port users will be connecting to
+
+
+
 int main(int argc, char *argv[])
 {
     int sockfd;
@@ -75,6 +78,76 @@ int main(int argc, char *argv[])
         printf("A file transfer can start\n");
     } else {
         printf("Usage: ftp <filename>\n");
+    }
+    
+    // Section 3
+    
+    FILE* file_ptr = fopen(file_name, "rb"); // rb for read binary
+    
+    if (file_ptr == NULL)
+    {
+      fprintf(stderr, "Unable to open file\n");
+      exit(1);
+    }
+    
+    // calculating the size of the file  in bytes
+    fseek(file_ptr, 0L, SEEK_END); 
+    unsigned int file_bytes = ftell(file_ptr); 
+    fseek(fp, 0L, SEEK_SET);
+    
+    // total packets required to send file
+    unsigned int file_total_frag = file_bytes / 1000;
+    if(file_bytes%1000 != 0)
+        file_total_frag++;
+    
+    unsigned int frag_no = 1;
+    
+    while(frag_no <= file_total_frag) {
+        unsigned char file_buffer[1000];
+        fread(file_buffer, sizeof(file_buffer), 1, file_ptr); // read contents of file
+        
+        struct packet pack;
+        
+        pack.total_frag = file_total_frag;
+        char* total_frag_str;
+        itoa(pack.total_frag, total_frag_str, 10); // convert total_frag to string
+        
+        pack.frag_no = frag_no;
+        char* frag_no_str;
+        itoa(pack.frag_no, frag_no_str, 10); // convert frag_no to string
+        
+        if(file_bytes%1000 == 0)
+            pack.size = 1000;
+        else {
+            if(frag_no < file_total_frag)
+                pack.size = 1000;
+            else 
+                pack.size = file_bytes%1000;
+        }
+        char* size_str;
+        itoa(pack.size, size_str, 10); // convert size to string
+        
+        strcpy(pack.filename, file_name);
+        strcpy(pack.filedata, file_buffer);
+        
+        // Build the packet string
+        char* pack_str;
+        strcpy(pack_str, total_frag_str);
+        strcat(pack_str, ":");
+        strcat(pack_str, frag_no_str);
+        strcat(pack_str, ":");
+        strcat(pack_str, size_str);
+        strcat(pack_str, ":");
+        strcat(pack_str, pack.filename);
+        strcat(pack_str, ":");
+        strcat(pack_str, pack.filedata);
+   
+        if(sendto(sockfd, pack_str, strlen(pack_str), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
+            fprintf(stderr, "Failed to send packet to server");
+            exit(1);
+        }
+        
+        frag_no++;
     }
 
     close(sockfd);
