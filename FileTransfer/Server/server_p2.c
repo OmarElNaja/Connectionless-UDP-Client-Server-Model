@@ -8,8 +8,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-
+// Will only compile on my computer
 #include "/homes/d/dengpris/ECE361/FileTransfer/packet.h"
+// To compile on yours, copy path of packet.h, and replace it over my path
 
 // Beej's Guide, page 60
 
@@ -51,10 +52,22 @@ int main(int argc, char const *argv[]){
         exit(1);
     }
     buf[numbytes] = '\0';
+    printf("Response: %s\n", buf);
     // create response
-    if (strcmp(buf, "ftp") == 0){
-
+    
+    if (strcmp(buf, "ftp") != 0){
+        if (sendto(sockfd, "no", strlen("no"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
+            fprintf(stderr, "Failed to send message back to client\n");
+            exit(1);
+        }
+    } else {
+        if (sendto(sockfd, "yes", strlen("yes"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
+            fprintf(stderr, "Failed to send message back to client\n");
+            exit(1);
+        }
     // -------------- SECTION 3 CODE --------------- //
+        printf("Waiting for transfer to start...");
+        
         FILE *fp;
         struct packet packet;
         while(1){
@@ -75,15 +88,12 @@ int main(int argc, char const *argv[]){
                 exit(1);
             }
             // End of file
-            if (packet.frag_no == packet.total_frag) break;
+            if (packet.frag_no == packet.total_frag) {
+                printf("I've reached the end of the file.");
+                break;
+            }
         }
         fclose(fp);
-
-    } else {
-        if (sendto(sockfd, "no", strlen("no"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
-            fprintf(stderr, "Failed to send message back to client\n");
-            exit(1);
-        }
     }
     printf("Message has been sent back to client.\n");
 

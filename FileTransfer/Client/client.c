@@ -9,11 +9,10 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <time.h>
-#include "FileTransfer/packet.h"
-//#define SERVERPORT "4950" 
-#define BUF_SIZE 1024
-// the port users will be connecting to
 
+// Will only compile on my computer
+#include "/homes/d/dengpris/ECE361/FileTransfer/packet.h"
+// To compile on yours, copy path of packet.h, and replace it over my path
 
 
 int main(int argc, char *argv[])
@@ -87,7 +86,8 @@ int main(int argc, char *argv[])
     if(strcmp(buf, "yes") == 0){
         printf("A file transfer can start\n");
     } else {
-        printf("Usage: ftp <filename>\n");
+        printf("Closing client connection\n");
+        exit(1);
     }
     
     // Section 3
@@ -99,12 +99,12 @@ int main(int argc, char *argv[])
       fprintf(stderr, "Unable to open file\n");
       exit(1);
     }
-    
+
     // calculating the size of the file  in bytes
     fseek(file_ptr, 0L, SEEK_END); 
     unsigned int file_bytes = ftell(file_ptr); 
-    fseek(fp, 0L, SEEK_SET);
-    
+    fseek(file_ptr, 0L, SEEK_SET);
+
     // total packets required to send file
     unsigned int file_total_frag = file_bytes / 1000;
     if(file_bytes%1000 != 0)
@@ -112,46 +112,57 @@ int main(int argc, char *argv[])
     
     unsigned int frag_no = 1;
     
+    char frag_no_str[BUF_SIZE];
+    char size_str[BUF_SIZE];
+    char total_frag_str[BUF_SIZE];
+    char pack_str[BUF_SIZE];
+    char file_buffer[1000];
+    char file_data[BUF_SIZE];
+
     while(frag_no <= file_total_frag) {
-        unsigned char file_buffer[1000];
-        fread(file_buffer, sizeof(file_buffer), 1, file_ptr); // read contents of file
+        int size;
         
-        struct packet pack;
+        fread(file_buffer, sizeof(char), 1000, file_ptr); // read contents of file
         
-        pack.total_frag = file_total_frag;
-        char* total_frag_str;
-        itoa(pack.total_frag, total_frag_str, 10); // convert total_frag to string
+        //struct packet pack;
         
-        pack.frag_no = frag_no;
-        char* frag_no_str;
-        itoa(pack.frag_no, frag_no_str, 10); // convert frag_no to string
-        
+        //pack.total_frag = file_total_frag;
+        //char* total_frag_str;
+        //itoa(pack.total_frag, total_frag_str, 10); // convert total_frag to string
+        sprintf(total_frag_str, "%d", file_total_frag);
+
+        //pack.frag_no = frag_no;
+        //char* frag_no_str;
+        //itoa(pack.frag_no, frag_no_str, 10); // convert frag_no to string
+        sprintf(frag_no_str, "%d", frag_no);
         if(file_bytes%1000 == 0)
-            pack.size = 1000;
+            size = 1000;
         else {
             if(frag_no < file_total_frag)
-                pack.size = 1000;
+               size = 1000;
             else 
-                pack.size = file_bytes%1000;
+                size = file_bytes%1000;
         }
-        char* size_str;
-        itoa(pack.size, size_str, 10); // convert size to string
-        
-        strcpy(pack.filename, file_name);
-        strcpy(pack.filedata, file_buffer);
-        
+        //char* size_str;
+        //itoa(pack.size, size_str, 10); // convert size to string
+        sprintf(size_str, "%d", size);
+        printf("Size of packet is: %s\n", size_str);
+
+        //strcpy(pack.filename, file_name);
+        //strcpy(pack.filedata, file_buffer);
+        memcpy(file_data, file_buffer, size);
         // Build the packet string
-        char* pack_str;
+        //char* pack_str;
         strcpy(pack_str, total_frag_str);
         strcat(pack_str, ":");
         strcat(pack_str, frag_no_str);
         strcat(pack_str, ":");
         strcat(pack_str, size_str);
         strcat(pack_str, ":");
-        strcat(pack_str, pack.filename);
+        strcat(pack_str, file_name);
         strcat(pack_str, ":");
-        strcat(pack_str, pack.filedata);
-   
+        strcat(pack_str, file_data);
+        printf("String sent: %s\n", pack_str);
         if(sendto(sockfd, pack_str, strlen(pack_str), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
             fprintf(stderr, "Failed to send packet to server");
             exit(1);
