@@ -82,16 +82,12 @@ int main(int argc, char const *argv[]){
         }
         // Parse packet
         stringToPacket(buf, &packet);
-        printf("PACKET TOTAL FRAG: %d\n", packet.total_frag);
-        printf("PACKET FRAG NUM: %d\n", packet.frag_no);
-        printf("PACKET SIZE: %d\n", packet.size);
-        printf("PACKET NAME: %s\n", packet.filename);
-        //printf("PACKET CONTENT: %s\n", packet.filedata);
         
         // Create file if packet no. 1
         if (packet.frag_no == 1) {       
-            strcpy(file_name, packet.filename);
-            fp = fopen(file_name, "wb");       
+            //strcpy(file_name, packet.filename);
+            //printf("file name is: %s\n", file_name);
+            fp = fopen(packet.filename, "wb");       
         }
         // Write to file
         fwrite(packet.filedata, sizeof(char), packet.size, fp);

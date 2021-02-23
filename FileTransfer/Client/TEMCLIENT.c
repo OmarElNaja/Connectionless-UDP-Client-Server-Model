@@ -116,6 +116,7 @@ int main(int argc, char *argv[])
     char size_str[BUF_SIZE];
     char total_frag_str[BUF_SIZE];
     char pack_str[BUF_SIZE];
+    char header_str[BUF_SIZE];
     char file_buffer[1000];
     char file_data[BUF_SIZE];
 
@@ -124,9 +125,17 @@ int main(int argc, char *argv[])
         memset(pack_str, 0, BUF_SIZE);
         fread(file_buffer, sizeof(char), 1000, file_ptr); // read contents of file
         
+        //struct packet pack;
+        
+        //pack.total_frag = file_total_frag;
+        //char* total_frag_str;
+        //itoa(pack.total_frag, total_frag_str, 10); // convert total_frag to string
         sprintf(total_frag_str, "%d", file_total_frag);
-        sprintf(frag_no_str, "%d", frag_no);
 
+        //pack.frag_no = frag_no;
+        //char* frag_no_str;
+        //itoa(pack.frag_no, frag_no_str, 10); // convert frag_no to string
+        sprintf(frag_no_str, "%d", frag_no);
         if(file_bytes%1000 == 0)
             size = 1000;
         else {
@@ -135,9 +144,15 @@ int main(int argc, char *argv[])
             else 
                 size = file_bytes%1000;
         }
-
+        //char* size_str;
+        //itoa(pack.size, size_str, 10); // convert size to string
         sprintf(size_str, "%d", size);
 
+        //strcpy(pack.filename, file_name);
+        //strcpy(pack.filedata, file_buffer);
+        memcpy(file_data, file_buffer, size);
+        // Build the packet string
+        //char* pack_str;
         strcpy(pack_str, total_frag_str);
         strcat(pack_str, ":");
         strcat(pack_str, frag_no_str);
@@ -147,20 +162,24 @@ int main(int argc, char *argv[])
         strcat(pack_str, file_name);
         strcat(pack_str, ":");
 
-        int offset = strlen(pack_str);
+        strcpy(header_str, pack_str);
 
-        memcpy(&pack_str[offset], file_buffer, size);
+        strcat(pack_str, file_data);
+
+        int a = strlen(header_str);
+        int b = strlen(pack_str);
+        printf("Header and size are: %d + %d\n",a ,size);
+        printf("Pack string is: %d\n", b);
         
-        if(sendto(sockfd, pack_str, BUF_SIZE, 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
+        if(sendto(sockfd, pack_str, strlen(pack_str), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
             fprintf(stderr, "Failed to send packet to server");
             exit(1);
         }
+        printf("String sent: %s\n", pack_str);
         
         // Check acknowledgemet
         numbytes  = recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len);
         buf[numbytes] = '\0';
-        printf("Client waiting for ack\n");
-        printf("%s\n", buf);
         if(strcmp(buf, "ACK") == 0){
             frag_no++;
         }

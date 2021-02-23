@@ -34,14 +34,15 @@ void stringToPacket(char* str, struct packet *packet){
             else if (count == 3){
                 packet->filename = parsed;
             }
-            else {
-                fprintf(stderr, "Packet error!\n");
-            }
+            //else {
+            //    fprintf(stderr, "Packet error!\n");
+            //}
             start = i+1;
             count++;
         }
         else if (count == 4){
             memcpy(&(packet->filedata), &str[start], packet->size);
+            break;
         }
     }
     return;
