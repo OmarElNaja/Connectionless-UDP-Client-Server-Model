@@ -86,8 +86,7 @@ int main(int argc, char const *argv[]){
         printf("PACKET FRAG NUM: %d\n", packet.frag_no);
         printf("PACKET SIZE: %d\n", packet.size);
         printf("PACKET NAME: %s\n", packet.filename);
-        printf("PACKET CONTENT: %s\n", packet.filedata);
-
+        //printf("PACKET CONTENT: %s\n", packet.filedata);
         
         // Create file if packet no. 1
         if (packet.frag_no == 1) {       
@@ -102,6 +101,7 @@ int main(int argc, char const *argv[]){
                 fprintf(stderr, "Failed to send message back to client\n");
                 exit(1);
             }
+            pack_count++;
         } else {
             if (sendto(sockfd, "NACK", strlen("NACK"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
                 fprintf(stderr, "Failed to send message back to client\n");

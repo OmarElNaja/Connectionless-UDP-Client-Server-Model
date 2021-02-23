@@ -1,4 +1,4 @@
-#define BUF_SIZE 1000
+#define BUF_SIZE 1024
 
 struct packet {
     unsigned int total_frag;

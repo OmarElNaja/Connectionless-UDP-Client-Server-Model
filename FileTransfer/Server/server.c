@@ -11,7 +11,7 @@
 
 // Beej's Guide, page 60
 
-#define BUF_SIZE 1024
+#define BUF_SIZE 2048
 
 int main(int argc, char const *argv[]){
     if(argc != 2){
