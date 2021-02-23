@@ -17,6 +17,7 @@ void stringToPacket(char* str, struct packet *packet){
 
     for (int i=0; i<BUF_SIZE; i++){
         if(str[i] == ':'){
+            length = i - start;
             memset(parsed, 0, BUF_SIZE);
             memcpy(parsed, &str[start], length);
             parsed[length] = '\0';
@@ -36,14 +37,12 @@ void stringToPacket(char* str, struct packet *packet){
             else {
                 fprintf(stderr, "Packet error!\n");
             }
-            start = i;
+            start = i+1;
             count++;
-            length = 0;
         }
         else if (count == 4){
             memcpy(&(packet->filedata), &str[start], packet->size);
         }
-        length++;
     }
     return;
 }

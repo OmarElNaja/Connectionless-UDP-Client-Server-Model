@@ -65,36 +65,52 @@ int main(int argc, char const *argv[]){
             fprintf(stderr, "Failed to send message back to client\n");
             exit(1);
         }
+    }
     // -------------- SECTION 3 CODE --------------- //
-        printf("Waiting for transfer to start...");
-        
-        FILE *fp;
-        struct packet packet;
-        while(1){
-            // Check if packet recieved
-            if (recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len) < 0){
-                fprintf(stderr, "Failed to receive from client\n");
-                exit(1);
-            }
-            // Parse packet
-            stringToPacket(buf, &packet);
-            // Create file if packet no. 1
-            if (packet.frag_no == 1) fp = fopen(packet.filename, "w");
-            // Write to file
-            fwrite(packet.filedata, sizeof(char), packet.size, fp);
-            // Send acknowledgement back to client
+    printf("Waiting for transfer to start...\n");
+    
+    FILE *fp;
+    struct packet packet;
+    int pack_count = 0;
+    while(1){
+        // Check if packet recieved
+        if (recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len) < 0){
+            fprintf(stderr, "Failed to receive from client\n");
+            exit(1);
+        }
+        // Parse packet
+        stringToPacket(buf, &packet);
+        printf("PACKET TOTAL FRAG: %d\n", packet.total_frag);
+        printf("PACKET FRAG NUM: %d\n", packet.frag_no);
+        printf("PACKET SIZE: %d\n", packet.size);
+        printf("PACKET NAME: %s\n", packet.filename);
+        printf("PACKET CONTENT: %s\n", packet.filedata);
+        // Create file if packet no. 1
+        if (packet.frag_no == 1) {
+            printf("are u writing???\n");
+            fp = fopen(packet.filename, "w");
+        }
+        // Write to file
+        fwrite(packet.filedata, sizeof(char), packet.size, fp);
+        // Send acknowledgement back to client
+        if (packet.frag_no - pack_count == 1){
             if (sendto(sockfd, "ACK", strlen("ACK"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
                 fprintf(stderr, "Failed to send message back to client\n");
                 exit(1);
             }
-            // End of file
-            if (packet.frag_no == packet.total_frag) {
-                printf("I've reached the end of the file.");
-                break;
+        } else {
+            if (sendto(sockfd, "NACK", strlen("NACK"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
+                fprintf(stderr, "Failed to send message back to client\n");
+                exit(1);
             }
         }
-        fclose(fp);
+        // End of file
+        if (packet.frag_no == packet.total_frag) {
+            printf("I've reached the end of the file.");
+            break;
+        }
     }
+    fclose(fp);
     printf("Message has been sent back to client.\n");
 
     close(sockfd);

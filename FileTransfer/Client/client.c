@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 
     while(frag_no <= file_total_frag) {
         int size;
-        
+        memset(pack_str, 0, BUF_SIZE);
         fread(file_buffer, sizeof(char), 1000, file_ptr); // read contents of file
         
         //struct packet pack;
@@ -146,7 +146,6 @@ int main(int argc, char *argv[])
         //char* size_str;
         //itoa(pack.size, size_str, 10); // convert size to string
         sprintf(size_str, "%d", size);
-        printf("Size of packet is: %s\n", size_str);
 
         //strcpy(pack.filename, file_name);
         //strcpy(pack.filedata, file_buffer);
@@ -162,13 +161,21 @@ int main(int argc, char *argv[])
         strcat(pack_str, file_name);
         strcat(pack_str, ":");
         strcat(pack_str, file_data);
-        printf("String sent: %s\n", pack_str);
+        
         if(sendto(sockfd, pack_str, strlen(pack_str), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
             fprintf(stderr, "Failed to send packet to server");
             exit(1);
         }
+        printf("String sent: %s\n", pack_str);
         
-        frag_no++;
+        // Check acknowledgemet
+        numbytes  = recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len);
+        buf[numbytes] = '\0';
+        printf("Client waiting for ack\n");
+        printf("%s\n", buf);
+        if(strcmp(buf, "ACK") == 0){
+            frag_no++;
+        }
     }
 
     close(sockfd);
