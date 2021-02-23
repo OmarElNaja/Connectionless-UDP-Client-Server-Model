@@ -8,42 +8,17 @@ struct packet {
     char filedata[BUF_SIZE];
 };
 
-
 void stringToPacket(char* str, struct packet *packet){
-    int count = 0;
-    int start = 0;
-    int length = 0;
-    char parsed[BUF_SIZE];
+    char *total_str = strtok(str, ":");
+    char *frag_str = strtok(NULL, ":");
+    char *size_str = strtok(NULL, ":");
 
-    for (int i=0; i<BUF_SIZE; i++){
-        if(str[i] == ':'){
-            length = i - start;
-            memset(parsed, 0, BUF_SIZE);
-            memcpy(parsed, &str[start], length);
-            parsed[length] = '\0';
-            
-            if (count == 0){              
-                packet->total_frag = atoi(parsed);
-            }
-            else if (count == 1){
-                packet->frag_no = atoi(parsed);
-            }
-            else if (count == 2){
-                packet->size = atoi(parsed);
-            }
-            else if (count == 3){
-                packet->filename = parsed;
-            }
-            //else {
-            //    fprintf(stderr, "Packet error!\n");
-            //}
-            start = i+1;
-            count++;
-        }
-        else if (count == 4){
-            memcpy(&(packet->filedata), &str[start], packet->size);
-            break;
-        }
-    }
-    return;
+    packet->total_frag = atoi(total_str);
+    packet->frag_no = atoi(frag_str);
+    packet->size = atoi(size_str);
+    packet->filename = strtok(NULL, ":");
+    
+    int offset = (strlen(total_str) + strlen(frag_str) + strlen(size_str) + strlen(packet->filename) + 4);
+    
+    memcpy(packet->filedata, str+offset, packet->size);
 }

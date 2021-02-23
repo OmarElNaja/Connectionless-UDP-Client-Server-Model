@@ -159,8 +159,8 @@ int main(int argc, char *argv[])
         // Check acknowledgemet
         numbytes  = recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len);
         buf[numbytes] = '\0';
-        printf("Client waiting for ack\n");
-        printf("%s\n", buf);
+        //printf("Client waiting for ack\n");
+        //printf("%s\n", buf);
         if(strcmp(buf, "ACK") == 0){
             frag_no++;
         }
