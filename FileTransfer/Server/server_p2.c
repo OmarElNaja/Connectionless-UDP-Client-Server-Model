@@ -72,6 +72,8 @@ int main(int argc, char const *argv[]){
     FILE *fp;
     struct packet packet;
     int pack_count = 0;
+    char file_name[BUF_SIZE];
+
     while(1){
         // Check if packet recieved
         if (recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len) < 0){
@@ -85,10 +87,12 @@ int main(int argc, char const *argv[]){
         printf("PACKET SIZE: %d\n", packet.size);
         printf("PACKET NAME: %s\n", packet.filename);
         printf("PACKET CONTENT: %s\n", packet.filedata);
+
+        
         // Create file if packet no. 1
-        if (packet.frag_no == 1) {
-            printf("are u writing???\n");
-            fp = fopen(packet.filename, "w");
+        if (packet.frag_no == 1) {       
+            strcpy(file_name, packet.filename);
+            fp = fopen(file_name, "wb");       
         }
         // Write to file
         fwrite(packet.filedata, sizeof(char), packet.size, fp);
