@@ -117,8 +117,8 @@ int main(int argc, char *argv[])
     char total_frag_str[BUF_SIZE];
     char pack_str[BUF_SIZE];
     char file_buffer[1000];
-    char file_data[BUF_SIZE];
 
+ 
     while(frag_no <= file_total_frag) {
         int size;
         memset(pack_str, 0, BUF_SIZE);

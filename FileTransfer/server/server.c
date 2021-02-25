@@ -81,7 +81,8 @@ int main(int argc, char const *argv[]){
             fprintf(stderr, "Failed to receive from client\n");
             exit(1);
         }
-        // Parse packet
+
+        // Parse packet (see packet.h)
         stringToPacket(buf, &packet);
         
         // Create file if packet no. 1
@@ -108,7 +109,7 @@ int main(int argc, char const *argv[]){
         }
         // End of file
         if (packet.frag_no == packet.total_frag) {
-            printf("I've reached the end of the file.");
+            printf("I've reached the end of the file.\n");
             break;
         }
     }
