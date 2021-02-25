@@ -31,7 +31,9 @@ int main(int argc, char *argv[])
 
     server_addr.sin_family = AF_INET;    // use 4/6
     server_addr.sin_port = htons(SERVERPORT);
-    server_addr.sin_addr.s_addr = INADDR_ANY;
+    struct hostent *remoteHost = gethostbyname(argv[1]);
+    //server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_addr =  *(struct in_addr *) remoteHost->h_addr;
     memset(server_addr.sin_zero, 0, sizeof(server_addr.sin_zero));  
 
     //make a socket
@@ -159,8 +161,7 @@ int main(int argc, char *argv[])
         // Check acknowledgemet
         numbytes  = recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len);
         buf[numbytes] = '\0';
-        //printf("Client waiting for ack\n");
-        //printf("%s\n", buf);
+
         if(strcmp(buf, "ACK") == 0){
             frag_no++;
         }
