@@ -123,8 +123,9 @@ int main(int argc, char *argv[])
     // Setting timeout value
     struct timeval timelimit;
     timelimit.tv_sec = 0;
-    timelimit.tv_usec = cpu_time_used * 500;
-    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timelimit, sizeof(timelimit)) != 0) {
+    timelimit.tv_sec = 5;
+    
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timelimit, sizeof(timelimit)) < 0) {
         printf("Error setting timeout\n");
         exit(1);
     }
@@ -169,12 +170,12 @@ int main(int argc, char *argv[])
         // Check acknowledgemet
         numbytes  = recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len);
         buf[numbytes] = '\0';
-        
+
         if(numbytes < 0) {
             if(errno == EAGAIN) {
                 printf("Timeout receiving ACK. Resending packet.\n");
                 //frag_no--;
-                fseek(fp, -size, SEEK_CUR); // go back in file by packet size so it can be resent
+                fseek(file_ptr, -size, SEEK_CUR); // go back in file by packet size so it can be resent
                 continue;
             } else { 
                 printf("Error receiving ACK.\n");
