@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
     // Setting timeout value
     struct timeval timelimit;
     timelimit.tv_sec = 0;
-    timelimit.tv_usec = cpu_time_used * 5;
+    timelimit.tv_usec = cpu_time_used * 500;
     if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timelimit, sizeof(timelimit)) != 0) {
         printf("Error setting timeout\n");
         exit(1);
