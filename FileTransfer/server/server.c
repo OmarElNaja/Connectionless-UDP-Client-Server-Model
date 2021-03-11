@@ -94,6 +94,11 @@ int main(int argc, char const *argv[]){
 
         // Write to file
         fwrite(packet.filedata, sizeof(char), packet.size, fp);
+        if (packet.frag_no % 50 == 0){
+            sleep(1);
+        }
+        printf("Pack count: %d\n", pack_count);
+        printf("Current pack: %d\n", packet.frag_no);
         // Send acknowledgement back to client
         if (packet.frag_no - pack_count == 1){
             if (sendto(sockfd, "ACK", strlen("ACK"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
@@ -101,6 +106,8 @@ int main(int argc, char const *argv[]){
                 exit(1);
             }
             pack_count++;
+
+
         } else {
             if (sendto(sockfd, "NACK", strlen("NACK"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
                 fprintf(stderr, "Failed to send message back to client\n");

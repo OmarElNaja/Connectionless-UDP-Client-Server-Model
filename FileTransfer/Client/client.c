@@ -122,8 +122,11 @@ int main(int argc, char *argv[])
     
     // Setting timeout value
     struct timeval timelimit;
+
     timelimit.tv_sec = 0;
-    timelimit.tv_sec = 5;
+    timelimit.tv_usec = (int)(cpu_time_used*1000000);
+    printf("timelimit val: %ld\n", timelimit.tv_usec);
+    printf("cpu: %f\n", cpu_time_used*1000000);
     
     if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timelimit, sizeof(timelimit)) < 0) {
         printf("Error setting timeout\n");
@@ -132,6 +135,7 @@ int main(int argc, char *argv[])
 
     while(frag_no <= file_total_frag) {
         int size;
+        reset:
         memset(pack_str, 0, BUF_SIZE);
         fread(file_buffer, sizeof(char), 1000, file_ptr); // read contents of file
         
@@ -166,6 +170,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Failed to send packet to server");
             exit(1);
         }
+        printf("sending: %s\n", frag_no_str);
         
         // Check acknowledgemet
         numbytes  = recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len);
@@ -173,9 +178,11 @@ int main(int argc, char *argv[])
 
         if(numbytes < 0) {
             if(errno == EAGAIN) {
-                printf("Timeout receiving ACK. Resending packet.\n");
+                printf("Timeout receiving ACK num: frag_no: %d. Resending packet.\n",frag_no);
+                printf("Timeout seconds: %f\n", cpu_time_used);
                 //frag_no--;
                 fseek(file_ptr, -size, SEEK_CUR); // go back in file by packet size so it can be resent
+                goto reset;
                 continue;
             } else { 
                 printf("Error receiving ACK.\n");
