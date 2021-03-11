@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
 
     while(frag_no <= file_total_frag) {
         int size;
-        reset:
+        //reset:
         memset(pack_str, 0, BUF_SIZE);
         fread(file_buffer, sizeof(char), 1000, file_ptr); // read contents of file
         
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 
         int offset = strlen(pack_str);
 
-        memcpy(&pack_str[offset], file_buffer, size);
+        memcpy(&pack_str[offset], file_buffer, size); 
         
         if(sendto(sockfd, pack_str, BUF_SIZE, 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
             fprintf(stderr, "Failed to send packet to server");
@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
                 printf("Timeout seconds: %f\n", cpu_time_used);
                 //frag_no--;
                 fseek(file_ptr, -size, SEEK_CUR); // go back in file by packet size so it can be resent
-                goto reset;
+                //goto reset;
                 continue;
             } else { 
                 printf("Error receiving ACK.\n");
