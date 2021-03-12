@@ -70,13 +70,15 @@ int main(int argc, char const *argv[]){
     printf("Waiting for transfer to start...\n");
     
     FILE *fp;
-    struct packet packet;
+
     int pack_count = 0;
+    struct packet packet;\
+    printf("size of packet:%ld", sizeof(packet));
 
     while(1){
         // Check if packet recieved
-        memset(buf, 0, BUF_SIZE);
-        memset(&packet, 0, sizeof(packet));
+        memset(buf, '\0', BUF_SIZE);
+        memset(&packet, '\0', BUF_SIZE);
         if (recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len) < 0){
             fprintf(stderr, "Failed to receive from client\n");
             exit(1);
@@ -87,20 +89,18 @@ int main(int argc, char const *argv[]){
         
         // Create file if packet no. 1
         if (packet.frag_no == 1) {       
-            //strcpy(file_name, packet.filename);
             printf("file name is: %s\n", packet.filename);
-            fp = fopen(packet.filename, "w");       
+            fp = fopen(packet.filename, "wb");       
         }
 
-        // Write to file
-        fwrite(packet.filedata, sizeof(char), packet.size, fp);
-        if (packet.frag_no % 50 == 0){
-            sleep(1);
-        }
-        printf("Pack count: %d\n", pack_count);
-        printf("Current pack: %d\n", packet.frag_no);
         // Send acknowledgement back to client
         if (packet.frag_no - pack_count == 1){
+            /*if (packet.frag_no % 50 == 0){
+                sleep(1);
+             }*/
+            // Write to file
+
+            fwrite(packet.filedata, sizeof(char), packet.size, fp);
             if (sendto(sockfd, "ACK", strlen("ACK"), 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0){
                 fprintf(stderr, "Failed to send message back to client\n");
                 exit(1);

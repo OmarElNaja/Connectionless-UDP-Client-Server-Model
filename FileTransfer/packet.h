@@ -1,4 +1,4 @@
-#define BUF_SIZE 1024
+#define BUF_SIZE 1048
 
 struct packet {
     unsigned int total_frag;
@@ -20,5 +20,5 @@ void stringToPacket(char* str, struct packet *packet){
     
     int offset = (strlen(total_str) + strlen(frag_str) + strlen(size_str) + strlen(packet->filename) + 4);
     
-    memcpy(packet->filedata, str+offset, packet->size);
+    memcpy(&(packet->filedata), str+offset, packet->size);
 }

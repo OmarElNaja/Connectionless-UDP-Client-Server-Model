@@ -124,13 +124,17 @@ int main(int argc, char *argv[])
     struct timeval timelimit;
 
     timelimit.tv_sec = 0;
-    timelimit.tv_usec = (int)(cpu_time_used*1000000);
+    timelimit.tv_usec = (int)(cpu_time_used*5000*1000000);
     printf("timelimit val: %ld\n", timelimit.tv_usec);
-    printf("cpu: %f\n", cpu_time_used*1000000);
+    printf("cpu: %f\n", cpu_time_used*5000*1000000);
+    
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timelimit, sizeof(timelimit)) < 0) {
+        printf("Error setting timeout\n");
+        exit(1);
+    }
 
     while(frag_no <= file_total_frag) {
         int size;
-        //reset:
         memset(pack_str, 0, BUF_SIZE);
         fread(file_buffer, sizeof(char), 1000, file_ptr); // read contents of file
         
@@ -159,29 +163,38 @@ int main(int argc, char *argv[])
 
         int offset = strlen(pack_str);
 
-        memcpy(&pack_str[offset], file_buffer, size); 
-        
+        memcpy(&pack_str[offset], file_buffer, size);
+        start = clock();
         if(sendto(sockfd, pack_str, BUF_SIZE, 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
             fprintf(stderr, "Failed to send packet to server");
             exit(1);
         }
-        printf("sending: %s\n", frag_no_str);
         
         // Check acknowledgemet
         numbytes  = recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len);
+
         buf[numbytes] = '\0';
 
-        if(numbytes < 0 && errno == EAGAIN) {
-            printf("Timeout receiving ACK num: frag_no: %d. Resending packet.\n",frag_no);
-            printf("Timeout seconds: %f\n", cpu_time_used);
-            //frag_no--;
-            fseek(file_ptr, -size, SEEK_CUR); // go back in file by packet size so it can be resent
-            //goto reset;
-            continue;
+        if(numbytes < 0) {
+            if(errno == EAGAIN) {
+                printf("Timeout receiving ACK num: frag_no: %d. Resending packet.\n",frag_no);
+                printf("Timeout seconds: %f\n", cpu_time_used);
+                timelimit.tv_usec = timelimit.tv_usec*2;
+                setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timelimit, sizeof(timelimit));
+                fseek(file_ptr, -size, SEEK_CUR); // go back in file by packet size so it can be resent
+                continue;
+            } else { 
+                printf("Error receiving ACK.\n");
+                exit(1);
+              }
         }
 
         if(strcmp(buf, "ACK") == 0){
             frag_no++;
+            end = clock();
+            cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+            timelimit.tv_usec = (int)(cpu_time_used*10*1000000);
+            setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timelimit, sizeof(timelimit));
         }
     }
 
