@@ -127,11 +127,6 @@ int main(int argc, char *argv[])
     timelimit.tv_usec = (int)(cpu_time_used*1000000);
     printf("timelimit val: %ld\n", timelimit.tv_usec);
     printf("cpu: %f\n", cpu_time_used*1000000);
-    
-    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timelimit, sizeof(timelimit)) < 0) {
-        printf("Error setting timeout\n");
-        exit(1);
-    }
 
     while(frag_no <= file_total_frag) {
         int size;
@@ -166,8 +161,6 @@ int main(int argc, char *argv[])
 
         memcpy(&pack_str[offset], file_buffer, size); 
         
-        start = clock();
-        
         if(sendto(sockfd, pack_str, BUF_SIZE, 0, (struct sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
             fprintf(stderr, "Failed to send packet to server");
             exit(1);
@@ -177,31 +170,14 @@ int main(int argc, char *argv[])
         // Check acknowledgemet
         numbytes  = recvfrom(sockfd, buf, BUF_SIZE, 0, (struct sockaddr*) &server_addr, &addr_len);
         buf[numbytes] = '\0';
-        
-        end = clock();
-        cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-        
-        timelimit.tv_usec = (int)(cpu_time_used*1000000);
-        printf("timelimit val: %ld\n", timelimit.tv_usec);
-        printf("cpu: %f\n", cpu_time_used*1000000);
-    
-        if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timelimit, sizeof(timelimit)) < 0) {
-             printf("Error setting timeout\n");
-            exit(1);
-        }
 
-        if(numbytes < 0) {
-            if(errno == EAGAIN) {
-                printf("Timeout receiving ACK num: frag_no: %d. Resending packet.\n",frag_no);
-                printf("Timeout seconds: %f\n", cpu_time_used);
-                //frag_no--;
-                fseek(file_ptr, -size, SEEK_CUR); // go back in file by packet size so it can be resent
-                //goto reset;
-                continue;
-            } else { 
-                printf("Error receiving ACK.\n");
-                exit(1);
-              }
+        if(numbytes < 0 && errno == EAGAIN) {
+            printf("Timeout receiving ACK num: frag_no: %d. Resending packet.\n",frag_no);
+            printf("Timeout seconds: %f\n", cpu_time_used);
+            //frag_no--;
+            fseek(file_ptr, -size, SEEK_CUR); // go back in file by packet size so it can be resent
+            //goto reset;
+            continue;
         }
 
         if(strcmp(buf, "ACK") == 0){
