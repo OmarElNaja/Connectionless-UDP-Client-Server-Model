@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
                 }
             }
         } // END looping through file descriptors
-    } // END while(1)
+    }  // END while(1)
 
     return 0;
 }
