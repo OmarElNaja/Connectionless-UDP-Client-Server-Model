@@ -100,7 +100,7 @@ void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
             strcat(pass_ip_port, ":");
             //printf("data: %s\n", pass_ip_port);
             data = pass_ip_port;
-            sprintf(size, "%d", strlen(pass_ip_port) - 1);
+            sprintf(size, "%ld", strlen(pass_ip_port) - 1);
 
         }
 
@@ -112,7 +112,7 @@ void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
                 return;
             }
             data = ptr;
-            sprintf(size, "%d", strlen(data) - 1);
+            sprintf(size, "%ld", strlen(data) - 1);
 
         }
 
@@ -126,7 +126,7 @@ void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
                 return;
             }
             data = ptr;
-            sprintf(size, "%d", strlen(data) - 1);
+            sprintf(size, "%ld", strlen(data) - 1);
 
         }
 
@@ -145,7 +145,7 @@ void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
         char *data;
         char size[10];
         data = user_in;
-        sprintf(size, "%d", strlen(data) - 1);
+        sprintf(size, "%ld", strlen(data) - 1);
 
         strncat(buf, "/message", 9);
         strncat(buf,":", 2);
@@ -168,18 +168,18 @@ int main(int argc, char *argv[])
     int fdmax;        // maximum file descriptor number
 
     int listener;     // listening socket descriptor
-    int newfd;        // newly accept()ed socket descriptor
-    struct sockaddr_storage remoteaddr; // client address
-    socklen_t addrlen;
+    //int newfd;        // newly accept()ed socket descriptor
+    //struct sockaddr_storage remoteaddr; // client address
+    //socklen_t addrlen;
 
     char store_user_id[50];
     char user_in[256]; //buffer for client input
     char buf[256];    // buffer for client data
-    int nbytes;
-    int logged_in = 0;
+    //int nbytes;
+    //int logged_in = 0;
     int retval = 0;
 
-    char remoteIP[INET6_ADDRSTRLEN];
+    //char remoteIP[INET6_ADDRSTRLEN];
 
     if (argc != 2) {
         fprintf(stderr, "usage: client hostname\n");
@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
     }
 
     int yes=1;        // for setsockopt() SO_REUSEADDR, below
-    int i, j, rv;
+    int i, rv;
 
     struct addrinfo hints, *ai, *p;
 
@@ -273,7 +273,8 @@ int main(int argc, char *argv[])
 
                 if (i == fd_stdin){
                     memset(user_in,0,strlen(user_in));
-                    int read_bytes = read(i, user_in, MAXBYTES);
+                    //int read_bytes = read(i, user_in, MAXBYTES);
+                    read(i, user_in, MAXBYTES);
                     if (strcmp(user_in, "/quit\n")==0){
                         if(send(listener, "/quit", sizeof("/quit"), 0) == -1){
                             perror("send");
@@ -294,7 +295,8 @@ int main(int argc, char *argv[])
                 else{
                     //there is a new connection waiting on the server port
                     memset(buf,0,strlen(buf));
-                    int ret = recv(listener,(char*)buf, sizeof(buf),0);
+                    //int ret = recv(listener,(char*)buf, sizeof(buf),0);
+                    recv(listener,(char*)buf, sizeof(buf),0);
                     printf("Server: %s\n", buf);
                     memset(buf,0,strlen(buf));
                     break;

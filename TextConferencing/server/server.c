@@ -13,7 +13,7 @@
 
 #define BUF_SIZE 1096
 
-char* file_name = "test.txt";
+char* file_name = "login.txt";
 struct user_list *user_list; // global
 struct sessions_list *sessions_list;
 
