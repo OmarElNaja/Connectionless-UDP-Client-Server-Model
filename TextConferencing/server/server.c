@@ -80,7 +80,7 @@ int main(int argc, char *argv[]){
     // add listener to master  
     FD_SET(listener, &master);       
     fdmax = listener; 
-  
+    printf("waiting...\n");
     for(;;) {        
         read_fds = master;    
         if (select(fdmax+1, &read_fds, NULL, NULL, NULL) == -1) {            
