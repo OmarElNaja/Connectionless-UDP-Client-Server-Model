@@ -192,10 +192,10 @@ int main(int argc, char *argv[])
 
     char remoteIP[INET6_ADDRSTRLEN];
 
-    if (argc != 2) {
-        fprintf(stderr, "usage: client hostname\n");
-        exit(1);
-    }
+   // if (argc != 2) {
+   //     fprintf(stderr, "usage: client hostname\n");
+   //     exit(1);
+   // }
 
     int yes=1;        // for setsockopt() SO_REUSEADDR, below
     int i, j, rv;
