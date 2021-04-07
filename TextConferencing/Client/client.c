@@ -11,6 +11,8 @@
 #define PORT "9035"   // port we're listening on
 #define MAXBYTES 200
 
+#include "../message.h"
+
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
 {
@@ -20,6 +22,7 @@ void *get_in_addr(struct sockaddr *sa)
 
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
+
 
 void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
 {
@@ -101,7 +104,7 @@ void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
             strcat(pass_ip_port, ":");
             //printf("data: %s\n", pass_ip_port);
             data = pass_ip_port;
-            sprintf(size, "%d", strlen(pass_ip_port) - 1);
+            sprintf(size, "%ld", strlen(pass_ip_port) - 1);
 
         }
 
@@ -113,7 +116,7 @@ void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
                 return;
             }
             data = ptr;
-            sprintf(size, "%d", strlen(data) - 1);
+            sprintf(size, "%ld", strlen(data) - 1);
 
         }
 
@@ -127,7 +130,7 @@ void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
                 return;
             }
             data = ptr;
-            sprintf(size, "%d", strlen(data) - 1);
+            sprintf(size, "%ld", strlen(data) - 1);
 
         }
 
@@ -139,7 +142,7 @@ void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
 	    return;
 	  }
 	  data = ptr;
-	  sprintf(size,"%d",strlen(data)-1);
+	  sprintf(size,"%ld",strlen(data)-1);
 	}
 
         strncat(buf, type, strlen(type));
@@ -156,7 +159,7 @@ void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
         char *data;
         char size[10];
         data = user_in;
-        sprintf(size, "%d", strlen(data) - 1);
+        sprintf(size, "%ld", strlen(data) - 1);
 
         strncat(buf, "/message", 9);
         strncat(buf,":", 2);
@@ -191,11 +194,11 @@ int main(int argc, char *argv[])
     int retval = 0;
 
     char remoteIP[INET6_ADDRSTRLEN];
-
-   // if (argc != 2) {
-   //     fprintf(stderr, "usage: client hostname\n");
-   //     exit(1);
-   // }
+    int fd_stdin = fileno(stdin);
+    /*if (argc != 2) {
+        fprintf(stderr, "usage: client hostname\n");
+        exit(1);
+    }
 
     int yes=1;        // for setsockopt() SO_REUSEADDR, below
     int i, j, rv;
@@ -262,10 +265,122 @@ int main(int argc, char *argv[])
     struct timeval tv;
     tv.tv_sec = 2;
     tv.tv_usec = 0;
-
+    */
     // main loop
+    int i, j, rv;
     while(1) {
-        read_fds = master; // copy it
+        while(!logged_in){
+            fgets(user_in, MAXBYTES, stdin);
+            //memset(buf,0,strlen(buf));
+
+            char temp[200];
+            char data_seg[100];
+            strcpy(temp, user_in);
+
+            //Tokenize user input by spaces
+            char *ptr;
+            char *type;
+            char size[10]
+            ptr = strtok(temp, " ");
+
+            //copy first user text segment to data_Seg
+            strcpy(data_seg, ptr);
+            if (strcmp(data_seg,"/login") == 0){
+            char pass_ip_port[100];
+            //type = ptr;
+            ptr = strtok(NULL," ");
+            if (ptr == NULL){
+                //*retval = 1;
+                return;
+            }
+            char userid[50];
+            strcpy(userid, ptr);
+            strcpy(store_user_id, userid);
+            ptr = strtok (NULL, " ");
+            if (ptr == NULL){
+                *retval = 1;
+                return;
+            }
+            strcpy(pass_ip_port, ptr);
+            strcat(pass_ip_port, ":");
+            ptr = strtok (NULL, " ");
+            if (ptr == NULL){
+                *retval = 1;
+                return;
+            }
+            strcat(pass_ip_port, ptr);
+            strcat(pass_ip_port, ":");
+            ptr = strtok (NULL, " ");
+            strcat(pass_ip_port, ptr);
+            strcat(pass_ip_port, ":");
+            //printf("data: %s\n", pass_ip_port);
+            char* data = pass_ip_port;
+            sprintf(size, "%ld", strlen(pass_ip_port) - 1);
+            }
+            if (send(sockfd, pass_ip_port, size, 0) == -1) perror("send");
+            memset(&hints, 0, sizeof hints);
+            hints.ai_family = AF_UNSPEC;
+            hints.ai_socktype = SOCK_STREAM;
+
+            if ((rv = getaddrinfo(serverIP, serverPort, &hints, &servinfo)) != 0) {
+                fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+                printf("Please try again and check your input.\n");
+                continue;
+            }
+
+            // loop through all the results and connect to the first we can
+            for(p = servinfo; p != NULL; p = p->ai_next) {
+                if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+                    perror("client: socket");
+                    continue;
+                }
+                if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+                    close(sockfd);
+                    perror("client: connect");
+                    continue;
+                }
+                break;
+            }
+
+            if (p == NULL) {
+                fprintf(stderr, "client: failed to connect\n");
+                printf("Please try again and check your input.\n");
+                continue;
+            }
+
+            inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr), s, sizeof s);
+            printf("client: connecting to %s\n", s);
+            freeaddrinfo(servinfo); // all done with this structure
+
+            // waiting for server's response
+            int numbytes;
+            if ((numbytes = recv(sockfd, buf, sizeof buf, 0)) == -1) {
+                perror("recv");
+                exit(1);
+            }
+            buf[numbytes] = '\0';
+
+            struct message* loginAckMessage;
+            stringToPacket((unsigned char*)buf, loginAckMessage);
+
+            if(loginAckMessage->type==LO_NAK){
+                printf("Login failed: %s. Please try again.\n", loginAckMessage->data);
+            }else if(loginAckMessage->type==LO_ACK){
+                printf("Welcome, %s.\n", clientID);
+                logged_in = 1;
+            }else{
+                printf("recv error on login\n");
+            }
+        }
+        fd_set master;
+        fd_set read_fds;
+
+        FD_ZERO(&master);
+        FD_ZERO(&read_fds);
+
+        FD_SET(stdin, &master);
+        FD_SET(sockfd, &master);
+        //read_fds = master; // copy it
         //select monitors sets of file descriptors (readfds,writefds,exceptds) and returns the file descriptors
         //that are ready for some sort of interaction (reading or writing).
 
