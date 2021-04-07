@@ -36,16 +36,18 @@ void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
     //copy first user text segment to data_Seg
     strcpy(data_seg, ptr);
 
-    if (strcmp(user_in, "/logout") == 0 || strcmp(user_in, "/leavesession") == 0 || strcmp(user_in, "/list") == 0 || strcmp(user_in, "/quit") == 0){
+    if (strcmp(user_in, "/logout") == 0 ||/* strcmp(user_in, "/leavesession") == 0 ||*/ strcmp(user_in, "/list") == 0 || strcmp(user_in, "/quit") == 0){
 
 
         char *type;
         if (strcmp(user_in, "/logout") == 0){
             type = "/logout";
         }
+	/*
         else if (strcmp(user_in, "/leavesession") == 0){
             type = "/leavesession";
         }
+	*/
         else if (strcmp(user_in, "/list") == 0){
             type = "/list";
         }
@@ -62,8 +64,7 @@ void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
         strncat(buf, "0", 2);
     }
 
-    else if(strcmp(data_seg, "/login") == 0 || strcmp(data_seg, "/joinsession") == 0 || strcmp(data_seg, "/createsession") == 0)
-    {
+    else if(strcmp(data_seg, "/login") == 0 || strcmp(data_seg, "/joinsession") == 0 || strcmp(data_seg,"/leavesession") == 0 || strcmp(data_seg, "/createsession") == 0){
         char *type;
         char *data;
         char size[10];
@@ -100,7 +101,7 @@ void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
             strcat(pass_ip_port, ":");
             //printf("data: %s\n", pass_ip_port);
             data = pass_ip_port;
-            sprintf(size, "%ld", strlen(pass_ip_port) - 1);
+            sprintf(size, "%d", strlen(pass_ip_port) - 1);
 
         }
 
@@ -112,7 +113,7 @@ void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
                 return;
             }
             data = ptr;
-            sprintf(size, "%ld", strlen(data) - 1);
+            sprintf(size, "%d", strlen(data) - 1);
 
         }
 
@@ -126,10 +127,20 @@ void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
                 return;
             }
             data = ptr;
-            sprintf(size, "%ld", strlen(data) - 1);
+            sprintf(size, "%d", strlen(data) - 1);
 
         }
 
+	else if(strcmp(data_seg,"/leavesession")==0){
+	  type = ptr;
+	  ptr = strtok(NULL," ");
+	  if(ptr == NULL){
+	    *retval = 1;
+	    return;
+	  }
+	  data = ptr;
+	  sprintf(size,"%d",strlen(data)-1);
+	}
 
         strncat(buf, type, strlen(type));
         strncat(buf,":", 2);
@@ -145,7 +156,7 @@ void produce_message(char *user_in, char *buf, char *store_user_id, int *retval)
         char *data;
         char size[10];
         data = user_in;
-        sprintf(size, "%ld", strlen(data) - 1);
+        sprintf(size, "%d", strlen(data) - 1);
 
         strncat(buf, "/message", 9);
         strncat(buf,":", 2);
@@ -168,18 +179,18 @@ int main(int argc, char *argv[])
     int fdmax;        // maximum file descriptor number
 
     int listener;     // listening socket descriptor
-    //int newfd;        // newly accept()ed socket descriptor
-    //struct sockaddr_storage remoteaddr; // client address
-    //socklen_t addrlen;
+    int newfd;        // newly accept()ed socket descriptor
+    struct sockaddr_storage remoteaddr; // client address
+    socklen_t addrlen;
 
     char store_user_id[50];
     char user_in[256]; //buffer for client input
     char buf[256];    // buffer for client data
-    //int nbytes;
-    //int logged_in = 0;
+    int nbytes;
+    int logged_in = 0;
     int retval = 0;
 
-    //char remoteIP[INET6_ADDRSTRLEN];
+    char remoteIP[INET6_ADDRSTRLEN];
 
     if (argc != 2) {
         fprintf(stderr, "usage: client hostname\n");
@@ -187,14 +198,14 @@ int main(int argc, char *argv[])
     }
 
     int yes=1;        // for setsockopt() SO_REUSEADDR, below
-    int i, rv;
+    int i, j, rv;
 
     struct addrinfo hints, *ai, *p;
 
     FD_ZERO(&master);    // clear the master and temp sets
     FD_ZERO(&read_fds);
 
-    // get a socket and bind it
+    // get us a socket and bind it
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
@@ -210,7 +221,7 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        // get rid of the "address already in use" error message
+        // get rid of "address already in use" error message
         setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
         if (connect(listener, p->ai_addr, p->ai_addrlen) < 0) {
@@ -221,7 +232,7 @@ int main(int argc, char *argv[])
         break;
     }
 
-    // if we get here, it means we didn't get bound
+    // if we got here, it means we didn't get bound
     if (p == NULL) {
         fprintf(stderr, "selectserver: failed to bind\n");
         exit(2);
@@ -231,7 +242,7 @@ int main(int argc, char *argv[])
 
     printf("Text Conferencing Server connected client, port %d \n", listener);
 
-    freeaddrinfo(ai); // all done with this structure
+    freeaddrinfo(ai); // all done with this
 
     int fd_stdin = fileno(stdin);
 
@@ -273,8 +284,7 @@ int main(int argc, char *argv[])
 
                 if (i == fd_stdin){
                     memset(user_in,0,strlen(user_in));
-                    //int read_bytes = read(i, user_in, MAXBYTES);
-                    read(i, user_in, MAXBYTES);
+                    int read_bytes = read(i, user_in, MAXBYTES);
                     if (strcmp(user_in, "/quit\n")==0){
                         if(send(listener, "/quit", sizeof("/quit"), 0) == -1){
                             perror("send");
@@ -295,16 +305,14 @@ int main(int argc, char *argv[])
                 else{
                     //there is a new connection waiting on the server port
                     memset(buf,0,strlen(buf));
-                    //int ret = recv(listener,(char*)buf, sizeof(buf),0);
-                    recv(listener,(char*)buf, sizeof(buf),0);
+                    int ret = recv(listener,(char*)buf, sizeof(buf),0);
                     printf("Server: %s\n", buf);
                     memset(buf,0,strlen(buf));
                     break;
                 }
             }
         } // END looping through file descriptors
-    }  // END while(1)
+    } // END while(1)
 
     return 0;
 }
-
