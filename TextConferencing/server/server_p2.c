@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include "../include/message_p2.h"
+#include "../message_p2.h"
 
 #define BUF_SIZE 1096
 

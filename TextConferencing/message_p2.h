@@ -204,19 +204,19 @@ struct sessions* addSession(struct sessions_list *s_list, char* session_name){
 }
 
 int updateSession(struct user_list *user, struct sessions_list *s_list, struct sessions *new_session, struct user *username){
-    char[MAX_USERS][MAX_NAME] remove_sessions; // sessions to change because user has left
+    char remove_sessions[MAX_USERS][MAX_NAME]; // sessions to change because user has left
     
     while(user){
         if (user->user == username) {
             // update data in user struct
-            if (new_session == NULL){
-                    remove_sessions = user->user->sessionID;
-                    user->user->sessionID = {'\0'}
-            }
             for(int i=0; i<MAX_USERS; i++){
+                if (new_session == NULL){
+                    strcpy(remove_sessions[i], user->user->sessionID[i]);
+                    strcpy(user->user->sessionID[i], '\0');
+                }
                 if (user->user->sessionID[i] == NULL){
                     // add new session
-                    strcpy(user->user->sessionID[i], new_session->sessionID);
+                    strcpy(user->user->sessionID[i], new_session->sessionID);               
                     break;
                 }
             }

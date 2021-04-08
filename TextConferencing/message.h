@@ -237,4 +237,3 @@ int updateSession(struct user_list *user, struct sessions_list *s_list, struct s
     }
     return -1; // failed
 }
-

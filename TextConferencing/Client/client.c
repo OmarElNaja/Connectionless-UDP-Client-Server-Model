@@ -11,7 +11,7 @@
 #define PORT "9035"   // port we're listening on
 #define MAXBYTES 200
 
-#include "../message.h"
+#include "../message_p2.h"
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)

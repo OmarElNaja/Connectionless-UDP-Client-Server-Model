@@ -198,7 +198,7 @@ int main(int argc, char *argv[]){
                             }
                         }
 
-                        if(message->type== LEAVE_SESS){
+                        if(message->type == LEAVE_SESS){
                             char username[MAX_DATA];
                             strcpy(username, (char*)message->source);
                             struct user *logout_user = searchDatabase(username, file_name);
